@@ -17,8 +17,8 @@ for col in df.columns:
     if "description" in col_clean or "desc" in col_clean:
         description_col = col
 
-    if not description_col:
-        return {"error": "No description column found"}
+   if not description_col:
+    return {"error": f"Columns found: {list(df.columns)}"}
 
     data = df[description_col].dropna().astype(str).str.lower()
 
