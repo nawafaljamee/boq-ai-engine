@@ -10,9 +10,12 @@ async def upload(file: UploadFile = File(...)):
     df.columns = df.columns.str.lower().str.strip()
 
     description_col = None
-    for col in df.columns:
-        if "description" in col:
-            description_col = col
+
+for col in df.columns:
+    col_clean = col.lower().strip()
+
+    if "description" in col_clean or "desc" in col_clean:
+        description_col = col
 
     if not description_col:
         return {"error": "No description column found"}
