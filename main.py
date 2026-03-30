@@ -3,10 +3,14 @@ import pandas as pd
 
 app = FastAPI()
 
-@app.post("/upload")
-async def upload(file: UploadFile = File(...)):
-    try:
-        # قراءة الملف
+try:
+    contents = await file.read()
+    df = pd.read_excel(contents)
+except Exception as e:
+    return {
+        "error": "Excel read failed",
+        "details": str(e)
+    }
         df = pd.read_excel(file.file)
 
         # تنظيف أسماء الأعمدة
