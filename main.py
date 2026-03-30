@@ -1,0 +1,35 @@
+from fastapi import FastAPI, UploadFile, File
+import pandas as pd
+
+app = FastAPI()
+
+@app.post("/upload")
+async def upload(file: UploadFile = File(...)):
+    df = pd.read_excel(file.file)
+
+    df.columns = df.columns.str.lower().str.strip()
+
+    description_col = None
+    for col in df.columns:
+        if "description" in col:
+            description_col = col
+
+    if not description_col:
+        return {"error": "No description column found"}
+
+    data = df[description_col].dropna().astype(str).str.lower()
+
+    lighting = data.str.contains("lighting").sum()
+    sockets = data.str.contains("socket").sum()
+    fcu = data.str.contains("fcu").sum()
+    heavy = data.str.contains("oven|wh|pump|charger").sum()
+
+    total = (lighting * 120) + (sockets * 150) + (fcu * 500) + (heavy * 700)
+
+    return {
+        "lighting": int(lighting),
+        "sockets": int(sockets),
+        "fcu": int(fcu),
+        "heavy": int(heavy),
+        "total_cost": total
+    }
