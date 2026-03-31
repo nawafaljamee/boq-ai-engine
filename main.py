@@ -14,13 +14,14 @@ async def upload_file(file: UploadFile = File(...)):
         contents = await file.read()
         filename = file.filename.lower()
 
-if filename.endswith(".csv"):
-    df = pd.read_csv(BytesIO(contents))
-elif filename.endswith((".xlsx", ".xls", ".xlsm", ".xlsb")):
-    df = pd.read_excel(BytesIO(contents))
-else:
-    return {"error": "Unsupported file type"}
-    df.columns = df.columns.astype(str).str.strip()
+        if filename.endswith(".csv"):
+            df = pd.read_csv(BytesIO(contents))
+        elif filename.endswith((".xlsx", ".xls", ".xlsm", ".xlsb")):
+            df = pd.read_excel(BytesIO(contents))
+        else:
+            return {"error": "Unsupported file type"}
+
+        df.columns = df.columns.astype(str).str.strip()
         return analyze_boq(df)
 
     except Exception as e:
