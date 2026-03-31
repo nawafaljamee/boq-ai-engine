@@ -12,7 +12,14 @@ app = FastAPI()
 async def upload_file(file: UploadFile = File(...)):
     try:
         contents = await file.read()
-        df = pd.read_excel(BytesIO(contents))
+        filename = file.filename.lower()
+
+if filename.endswith(".csv"):
+    df = pd.read_csv(BytesIO(contents))
+elif filename.endswith((".xlsx", ".xls", ".xlsm", ".xlsb")):
+    df = pd.read_excel(BytesIO(contents))
+else:
+    return {"error": "Unsupported file type"}
         return analyze_boq(df)
 
     except Exception as e:
