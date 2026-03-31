@@ -1,54 +1,54 @@
+from io import BytesIO
+
 from fastapi import FastAPI, UploadFile, File
 import pandas as pd
 
 app = FastAPI()
 
-try:
-    contents = await file.read()
-    df = pd.read_excel(contents)
-except Exception as e:
-    return {
-        "error": "Excel read failed",
-        "details": str(e)
-    }
-        df = pd.read_excel(file.file)
 
-        # تنظيف أسماء الأعمدة
-        df.columns = df.columns.astype(str).str.lower().str.strip()
+def find_description_column(df: pd.DataFrame) -> str | None:
+    df.columns = df.columns.astype(str).str.lower().str.strip()
 
-        # البحث عن عمود الوصف
-        description_col = None
-        for col in df.columns:
-            if "description" in col or "desc" in col:
-                description_col = col
-                break
+    for col in df.columns:
+        if "description" in col or "desc" in col:
+            return col
 
-        # إذا ما حصل العمود
-        if not description_col:
-            return {
-                "error": "No description column found",
-                "columns": list(df.columns)
-            }
+    return None
 
-        # تنظيف البيانات
-        data = df[description_col].dropna().astype(str).str.lower()
 
-        # تحليل البيانات
-        lighting = data.str.contains("lighting").sum()
-        sockets = data.str.contains("socket").sum()
-        fcu = data.str.contains("fcu").sum()
-        heavy = data.str.contains("oven|wh|pump|charger").sum()
+def analyze_boq(df: pd.DataFrame) -> dict:
+    description_col = find_description_column(df)
 
-        # حساب التكلفة
-        total = (lighting * 120) + (sockets * 150) + (fcu * 500) + (heavy * 700)
-
+    if not description_col:
         return {
-            "lighting": int(lighting),
-            "sockets": int(sockets),
-            "fcu": int(fcu),
-            "heavy": int(heavy),
-            "total_cost": int(total)
+            "error": "No description column found",
+            "columns": list(df.columns)
         }
+
+    data = df[description_col].dropna().astype(str).str.lower()
+
+    lighting = data.str.contains(r"lighting", regex=True).sum()
+    sockets = data.str.contains(r"socket", regex=True).sum()
+    fcu = data.str.contains(r"fcu", regex=True).sum()
+    heavy = data.str.contains(r"oven|pump|charger", regex=True).sum()
+
+    total = (lighting * 120) + (sockets * 150) + (fcu * 500) + (heavy * 700)
+
+    return {
+        "lighting": int(lighting),
+        "sockets": int(sockets),
+        "fcu": int(fcu),
+        "heavy": int(heavy),
+        "total_cost": int(total)
+    }
+
+
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        df = pd.read_excel(BytesIO(contents))
+        return analyze_boq(df)
 
     except Exception as e:
         return {
