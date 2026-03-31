@@ -5,15 +5,71 @@ def find_description_column(df: pd.DataFrame):
     df.columns = df.columns.astype(str).str.lower().str.strip()
 
     for col in df.columns:
-        if "description" in col or "desc" in col:
+       def find_description_column(df: pd.DataFrame):
+    original_columns = list(df.columns)
+
+    normalized_map = {
+        str(col).strip().lower(): col
+        for col in original_columns
+    }
+
+    exact_candidates = [
+        "description",
+        "desc",
+        "item description",
+        "work description",
+        "material description",
+        "scope",
+        "remarks",
+    ]
+
+    for candidate in exact_candidates:
+        if candidate in normalized_map:
+            return normalized_map[candidate]
+
+    partial_keywords = [
+        "description",
+        "desc",
+        "scope",
+        "remark",
+        "details",
+        "item",
+    ]
+
+    for col in original_columns:
+        col_clean = str(col).strip().lower()
+        if any(keyword in col_clean for keyword in partial_keywords):
             return col
 
-    return None
+    best_col = None
+    best_score = -1
 
+    sample_keywords = [
+        "light", "lighting", "socket", "fcu",
+        "oven", "pump", "charger", "panel",
+        "cable", "wire", "outlet"
+    ]
 
-def analyze_boq(df: pd.DataFrame) -> dict:
-    description_col = find_description_column(df)
+    for col in original_columns:
+        series = df[col].dropna().astype(str).str.lower().head(20)
 
+        if series.empty:
+            continue
+
+        score = 0
+
+        for value in series:
+            if len(value.split()) >= 2:
+                score += 1
+
+            if any(keyword in value for keyword in sample_keywords):
+                score += 2
+
+        if score > best_score:
+            best_score = score
+            best_col = col
+
+    return best_col
     if not description_col:
         return {
             "error": "No description column found",
