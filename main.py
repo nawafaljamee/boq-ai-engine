@@ -20,6 +20,7 @@ elif filename.endswith((".xlsx", ".xls", ".xlsm", ".xlsb")):
     df = pd.read_excel(BytesIO(contents))
 else:
     return {"error": "Unsupported file type"}
+    df.columns = df.columns.astype(str).str.strip()
         return analyze_boq(df)
 
     except Exception as e:
