@@ -78,10 +78,10 @@ def find_description_column(df: pd.DataFrame):
 
     data = df[description_col].dropna().astype(str).str.lower()
 
-    lighting = data.str.contains(r"lighting", regex=True).sum()
-    sockets = data.str.contains(r"socket", regex=True).sum()
-    fcu = data.str.contains(r"fcu", regex=True).sum()
-    heavy = data.str.contains(r"oven|pump|charger", regex=True).sum()
+    lighting = data.str.contains(r"light|lighting|led", regex=True).sum()
+sockets = data.str.contains(r"socket|outlet", regex=True).sum()
+fcu = data.str.contains(r"\bfcu\b|fan coil", regex=True).sum()
+heavy = data.str.contains(r"oven|pump|charger|heater", regex=True).sum()
 
     total = (lighting * 120) + (sockets * 150) + (fcu * 500) + (heavy * 700)
 
